@@ -3,17 +3,21 @@ import 'package:flutter_todo_practice_1/controllers/task_controller.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-class AddTaskScreen extends StatelessWidget {
-  // final TextEditingController _controller1 = TextEditingController();
-  // final TextEditingController _controller2 = TextEditingController();
+class EditTaskScreen extends StatelessWidget {
+  var index;
 
-  AddTaskScreen({super.key});
+  EditTaskScreen({super.key, required this.index});
 
   @override
   Widget build(BuildContext context) {
     TaskController taskController = Get.find();
-    final TextEditingController controller1 = TextEditingController();
-    final TextEditingController controller2 = TextEditingController();
+    final TextEditingController controller1 =
+        TextEditingController()..text = taskController.taskList[index].taskName;
+    final TextEditingController controller2 =
+        TextEditingController()
+          ..text = DateFormat(
+            'yyyy-MM-dd',
+          ).format(taskController.taskList[index].startDate);
 
     return Scaffold(
       appBar: AppBar(),
@@ -42,7 +46,7 @@ class AddTaskScreen extends StatelessWidget {
                   labelText: 'Task Date',
                   labelStyle: TextStyle(color: Colors.grey),
                 ),
-                readOnly: true, // when true user cannot edit text
+                // readOnly: true,
                 onTap: () async {
                   DateTime? pickedDate = await showDatePicker(
                     context: context,
@@ -51,16 +55,10 @@ class AddTaskScreen extends StatelessWidget {
                     lastDate: DateTime(2101),
                   );
                   if (pickedDate != null) {
-                    //get the picked date in the format => 2022-07-04 00:00:00.000
                     String formattedDate = DateFormat(
                       'yyyy-MM-dd',
                     ).format(pickedDate);
-                    // format date in required form here we use yyyy-MM-dd that means time is removed
-                    // formatted date output [using intl package] =>  2022-07-04
-                    // You can format date as per your need
-
-                    controller2.text =
-                        formattedDate; //set foratted date to TextField value.
+                    controller2.text = formattedDate;
                   }
                 },
               ),
@@ -72,7 +70,8 @@ class AddTaskScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           DateTime taskDate = DateTime.parse(controller2.text);
-          taskController.createTask(
+          taskController.updateTask(
+            index,
             controller1.text,
             taskDate,
           ); // call createTask function

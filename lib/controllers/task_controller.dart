@@ -9,21 +9,8 @@ class TaskController extends GetxController {
       id: taskList.length + 1,
       taskName: name,
       startDate: date,
-      // startDate: DateTime(date.year, date.month, date.day),
-      // startDate: DateUtils.dateOnly(date),
     );
-
     taskList.add(task);
-    taskList.refresh();
-    // print('task created');
-    // print(taskList[0].id);
-    // print(taskList[0].taskName);
-    // print(taskList[0].startDate);
-    // print(taskList.length);
-  }
-
-  Future<void> addToList(TaskModel theTask) async {
-    taskList.add(theTask);
     taskList.refresh();
   }
 
@@ -32,8 +19,11 @@ class TaskController extends GetxController {
     taskList.refresh();
   }
 
-  Future<void> updateTask(int index, String name) async {
-    taskList[index].taskName = name;
+  Future<void> updateTask(int index, String name, DateTime date) async {
+    final task = TaskModel(id: index, taskName: name, startDate: date);
+
+    taskList.removeAt(index);
+    taskList.insert(index, task);
     taskList.refresh();
   }
 

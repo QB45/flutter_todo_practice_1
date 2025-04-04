@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_todo_practice_1/views/main_screen.dart';
+import 'views/main_screen.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
+
+const taskDB = 'taskDataBase';
 
 Future<void> main() async {
-  await Hive.initflutter();
   runApp(const ToDoPractice());
-}
-
-extension on HiveInterface {
-  initflutter() {}
 }
 
 class ToDoPractice extends StatelessWidget {

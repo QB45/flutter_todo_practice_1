@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_todo_practice_1/controllers/task_controller.dart';
 import 'package:flutter_todo_practice_1/views/add_task_screen.dart';
+import 'package:flutter_todo_practice_1/views/edit_task_screen.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 class MainScreen extends StatelessWidget {
   MainScreen({super.key});
-  final title1 = "Add New Task".obs;
-  final h1 = 50.0.obs;
   // Initialize TaskController once
   final TaskController taskController = Get.put(TaskController());
-
-  // get taskList => taskController.taskList;
 
   @override
   Widget build(Object context) {
@@ -23,26 +20,21 @@ class MainScreen extends StatelessWidget {
             InkWell(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Obx(
-                  () => Container(
-                    height: h1.value,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.amber,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-
-                    child: Center(
-                      child: Text(title1.value, style: TextStyle(fontSize: 20)),
-                    ),
+                child: Container(
+                  height: 50,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.amber,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: Text("Add New Task", style: TextStyle(fontSize: 20)),
                   ),
                 ),
               ),
               onTap: () {
                 // Get.to(AddTaskScreen());
                 Get.to(() => AddTaskScreen());
-                // title1.value = "old task";
-                // h1.value = 80;
               },
             ),
 
@@ -60,7 +52,6 @@ class MainScreen extends StatelessWidget {
                       border: Border.all(color: Colors.black),
                       borderRadius: BorderRadius.circular(10),
                     ),
-
                     child:
                         taskController.taskList.isEmpty
                             ? Center(
@@ -90,7 +81,6 @@ class MainScreen extends StatelessWidget {
                                       color: Colors.blue,
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    // color: Colors.cyanAccent,
                                     child: Center(
                                       child: Row(
                                         mainAxisAlignment:
@@ -122,8 +112,13 @@ class MainScreen extends StatelessWidget {
                                             ),
                                           ),
                                           InkWell(
-                                            // onTap: _pickDate,
-                                            // onTap: _pickDate,
+                                            onTap: () {
+                                              Get.to(
+                                                () => EditTaskScreen(
+                                                  index: index,
+                                                ),
+                                              );
+                                            },
                                             child: Icon(Icons.edit),
                                           ),
                                           SizedBox(width: 10),
