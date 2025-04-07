@@ -17,7 +17,6 @@ class TaskHiveAdapter extends TypeAdapter<TaskHive> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return TaskHive()
-      ..id = fields[0] as int
       ..name = fields[1] as String
       ..date = fields[2] as DateTime;
   }
@@ -25,9 +24,7 @@ class TaskHiveAdapter extends TypeAdapter<TaskHive> {
   @override
   void write(BinaryWriter writer, TaskHive obj) {
     writer
-      ..writeByte(3)
-      ..writeByte(0)
-      ..write(obj.id)
+      ..writeByte(2)
       ..writeByte(1)
       ..write(obj.name)
       ..writeByte(2)

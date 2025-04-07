@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_todo_practice_1/controllers/task_controller.dart';
 import 'package:get/get.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
+import '../components/hive_data.dart';
+import '../main.dart';
 
 class EditTaskScreen extends StatelessWidget {
-  var index;
+  int index;
 
   EditTaskScreen({super.key, required this.index});
+
+  get theBox => Hive.box<TaskHive>(taskBoxName);
 
   @override
   Widget build(BuildContext context) {
@@ -46,11 +52,11 @@ class EditTaskScreen extends StatelessWidget {
                   labelText: 'Task Date',
                   labelStyle: TextStyle(color: Colors.grey),
                 ),
-                // readOnly: true,
+                readOnly: true,
                 onTap: () async {
                   DateTime? pickedDate = await showDatePicker(
                     context: context,
-                    initialDate: DateTime.now(),
+                    initialDate: taskController.taskList[index].startDate,
                     firstDate: DateTime.now(),
                     lastDate: DateTime(2101),
                   );
@@ -70,11 +76,12 @@ class EditTaskScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           DateTime taskDate = DateTime.parse(controller2.text);
-          taskController.updateTask(
-            index,
-            controller1.text,
-            taskDate,
-          ); // call createTask function
+          // call updateTask function
+          taskController.updateTask(index, controller1.text, taskDate);
+          final theTask = TaskHive();
+          theTask.name = controller1.text;
+          theTask.date = taskDate;
+          theBox.putAt(index, theTask);
           Get.back();
         },
         label: Text('Save changes'),

@@ -21,11 +21,8 @@ class TaskController extends GetxController {
 
   Future<void> updateTask(int index, String name, DateTime date) async {
     final task = TaskModel(id: index, taskName: name, startDate: date);
-
     taskList.removeAt(index);
     taskList.insert(index, task);
     taskList.refresh();
   }
-
-  // TaskController({required this.taskModel});
 }
