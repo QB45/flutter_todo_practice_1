@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_todo_practice_1/controllers/task_controller.dart';
 import 'package:flutter_todo_practice_1/main.dart';
 import 'package:flutter_todo_practice_1/models/task_model.dart';
-import 'package:flutter_todo_practice_1/views/add_task_screen.dart';
-import 'package:flutter_todo_practice_1/views/edit_task_screen.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
@@ -14,10 +12,17 @@ class MainScreen extends StatelessWidget {
   // Initialize TaskController once
   final TaskController taskController = Get.put(TaskController());
 
+  final TextEditingController controller1 = TextEditingController();
+  final TextEditingController controller2 = TextEditingController();
+
   final theBox = Hive.box<TaskHive>(taskBoxName);
 
+  String text1 = '', text2 = '';
+  final int index = 0;
+  bool isEdit = false;
+
   @override
-  Widget build(Object context) {
+  Widget build(BuildContext context) {
     if (theBox.isNotEmpty) {
       for (int i = 0; i < theBox.length; i++) {
         taskController.taskList.add(
@@ -51,7 +56,10 @@ class MainScreen extends StatelessWidget {
                 ),
               ),
               onTap: () {
-                Get.to(() => AddTaskScreen()); // or Get.to(AddTaskScreen());
+                isEdit = false;
+                String text1 = '', text2 = '';
+                int index = 0;
+                taskBottonSheet(context, text1, text2, index);
               },
             ),
 
@@ -68,7 +76,6 @@ class MainScreen extends StatelessWidget {
                       border: Border.all(color: Colors.black),
                       borderRadius: BorderRadius.circular(10),
                     ),
-
                     child:
                         taskController.taskList.isEmpty
                             ? Center(
@@ -85,12 +92,20 @@ class MainScreen extends StatelessWidget {
                               scrollDirection: Axis.vertical,
                               itemBuilder: ((context, index) {
                                 return Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    8,
-                                    8,
-                                    8,
-                                    0,
-                                  ),
+                                  padding:
+                                      (index == 0)
+                                          ? const EdgeInsets.fromLTRB(
+                                            8,
+                                            8,
+                                            8,
+                                            8,
+                                          )
+                                          : const EdgeInsets.fromLTRB(
+                                            8,
+                                            0,
+                                            8,
+                                            8,
+                                          ),
                                   child: Container(
                                     height: 60,
                                     width: double.infinity,
@@ -130,11 +145,23 @@ class MainScreen extends StatelessWidget {
                                           ),
                                           InkWell(
                                             onTap: () {
-                                              // goto editTask screen
-                                              Get.to(
-                                                () => EditTaskScreen(
-                                                  index: index,
-                                                ),
+                                              isEdit = true;
+                                              text1 =
+                                                  taskController
+                                                      .taskList[index]
+                                                      .taskName;
+                                              text2 = DateFormat(
+                                                'yyyy-MM-dd',
+                                              ).format(
+                                                taskController
+                                                    .taskList[index]
+                                                    .startDate,
+                                              );
+                                              taskBottonSheet(
+                                                context,
+                                                text1,
+                                                text2,
+                                                index,
                                               );
                                             },
                                             child: Icon(Icons.edit),
@@ -163,6 +190,107 @@ class MainScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Future<dynamic> taskBottonSheet(
+    BuildContext context,
+    String text1,
+    String text2,
+    int index,
+  ) {
+    return showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          height: 300,
+          width: double.infinity,
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 48, 16),
+            child: Column(
+              children: [
+                SizedBox(height: 20),
+                TextFormField(
+                  controller:
+                      !isEdit ? controller1 : controller1
+                        ..text = text1,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    icon: Icon(Icons.text_fields),
+                    label: Text(
+                      'Task Name',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+                Expanded(
+                  child: TextFormField(
+                    controller:
+                        !isEdit ? controller2 : controller2
+                          ..text = text2,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      icon: const Icon(Icons.calendar_today),
+                      labelText: 'Task Date',
+                      labelStyle: const TextStyle(color: Colors.grey),
+                    ),
+                    readOnly: true,
+                    onTap: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime(2101),
+                      );
+                      if (pickedDate != null) {
+                        // DateFormat() ... [using intl package]
+                        String formattedDate = DateFormat(
+                          'yyyy-MM-dd',
+                        ).format(pickedDate);
+                        controller2.text = formattedDate;
+                      }
+                    },
+                  ),
+                ),
+
+                ElevatedButton(
+                  onPressed: () {
+                    DateTime taskDate = DateTime.parse(controller2.text);
+
+                    if (isEdit) {
+                      DateTime taskDate = DateTime.parse(controller2.text);
+                      // call updateTask function
+                      taskController.updateTask(
+                        index,
+                        controller1.text,
+                        taskDate,
+                      );
+                      final theTask = TaskHive();
+                      theTask.name = controller1.text;
+                      theTask.date = taskDate;
+                      theBox.putAt(index, theTask);
+                    } else {
+                      taskController.createTask(controller1.text, taskDate);
+                      final theTask = TaskHive();
+                      theTask.name = controller1.text;
+                      theTask.date = taskDate;
+                      theBox.add(theTask);
+                    }
+
+                    Get.back();
+                    // Navigator.pop(context);
+                    // Navigator.of(context).pop();
+                  },
+                  child: Text('Save changes'),
+                ),
+                SizedBox(height: 20),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
