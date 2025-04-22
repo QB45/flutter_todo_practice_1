@@ -4,11 +4,12 @@ import 'package:get/get.dart';
 class TaskController extends GetxController {
   RxList<TaskModel> taskList = <TaskModel>[].obs;
 
-  Future<void> createTask(String name, DateTime date) async {
+  Future<void> createTask(String name, DateTime date, bool highPriority) async {
     final task = TaskModel(
       id: taskList.length + 1,
       taskName: name,
       startDate: date,
+      highPriority: highPriority,
     );
     taskList.add(task);
     taskList.refresh();
@@ -19,8 +20,8 @@ class TaskController extends GetxController {
     taskList.refresh();
   }
 
-  Future<void> updateTask(int index, String name, DateTime date) async {
-    final task = TaskModel(id: index, taskName: name, startDate: date);
+  Future<void> updateTask(int index, String name, DateTime date, bool highPriority) async {
+    final task = TaskModel(id: index, taskName: name, startDate: date, highPriority: highPriority);
     taskList.removeAt(index);
     taskList.insert(index, task);
     taskList.refresh();

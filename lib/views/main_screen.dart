@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_todo_practice_1/components/my_styles.dart';
+import 'package:flutter_todo_practice_1/controllers/radio_controller.dart';
 import 'package:flutter_todo_practice_1/controllers/task_controller.dart';
 import 'package:flutter_todo_practice_1/main.dart';
 import 'package:flutter_todo_practice_1/models/task_model.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
-import '../components/hive_data.dart';
+import 'package:flutter_todo_practice_1/components/hive_data.dart';
+import 'setting_screen.dart';
 
 // ignore: must_be_immutable
 class MainScreen extends StatelessWidget {
@@ -17,27 +20,78 @@ class MainScreen extends StatelessWidget {
   final TextEditingController controller1 = TextEditingController();
   final TextEditingController controller2 = TextEditingController();
 
-  final theBox = Hive.box<TaskHive>(taskBoxName);
+  final theTaskBox = Hive.box<TaskHive>(taskBoxName);
+  final theSortBox = Hive.box(sortBoxName);
+
+  final RadioController radioController = Get.put(RadioController());
 
   String text1 = '', text2 = '';
   final int index = 0;
   bool isEdit = false;
+  RxBool highPriority = false.obs;
+  // late int sortBy;
+  // late int sortMode;
 
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
-    if (theBox.isNotEmpty) {
-      for (int i = 0; i < theBox.length; i++) {
+    if (theSortBox.isNotEmpty) {
+      radioController.selected1Value.value = theSortBox.get('sortBy');
+      radioController.selected2Value.value = theSortBox.get('sortMode');
+    }
+
+    if (theTaskBox.isNotEmpty) {
+      for (int i = 0; i < theTaskBox.length; i++) {
         taskController.taskList.add(
-          TaskModel(id: i, taskName: theBox.getAt(i)!.name, startDate: theBox.getAt(i)!.date),
+          TaskModel(
+            id: i,
+            taskName: theTaskBox.getAt(i)!.name,
+            startDate: theTaskBox.getAt(i)!.date,
+            highPriority: theTaskBox.getAt(i)!.highPriority,
+          ),
         );
       }
     }
 
     return Scaffold(
       key: _scaffoldKey,
-      appBar: AppBar(),
+
+      appBar: AppBar(
+        title: const Text('To Do List'),
+        centerTitle: true,
+        backgroundColor: Colors.amber,
+        elevation: 0,
+
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (String result) {
+              if (result == 'Edit') {
+                // isEdit = true;
+              } else if (result == 'Delete') {
+                // taskController.deleteTask(index);
+              } else if (result == 'Settings') {
+                Get.to(() => SettingScreen());
+                // _scaffoldKey.currentState!.openDrawer();
+              } else if (result == 'Exit') {
+                SystemNavigator.pop();
+              }
+            },
+            itemBuilder:
+                (BuildContext context) => <PopupMenuEntry<String>>[
+                  PopupMenuItem<String>(value: 'Edit', child: Text('Edit')),
+                  PopupMenuItem<String>(value: 'Delete', child: Text('Delete')),
+                  PopupMenuItem<String>(value: 'Settings', child: Text('Settings')),
+                  PopupMenuItem<String>(value: 'Exit', child: Text('Exit')),
+                ],
+          ),
+        ],
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => _scaffoldKey.currentState!.openDrawer(),
+        ),
+      ),
+
       body: Center(
         child: Column(
           children: [
@@ -56,6 +110,7 @@ class MainScreen extends StatelessWidget {
               ),
               onTap: () {
                 isEdit = false;
+                highPriority.value = false;
                 String text1 = '', text2 = '';
                 int index = 0;
                 taskBottomSheet(text1, text2, index);
@@ -68,6 +123,33 @@ class MainScreen extends StatelessWidget {
                 init: TaskController(),
                 initState: (_) {},
                 builder: (_) {
+                  if (radioController.selected1Value.value == 1) {
+                    if (radioController.selected2Value.value == 1) {
+                      taskController.taskList.sort(
+                        (a, b) => intMeanOf(b.highPriority).compareTo(intMeanOf(a.highPriority)),
+                      );
+                      taskController.taskList.sort((a, b) => a.startDate.compareTo(b.startDate));
+                    } else if (radioController.selected2Value.value == 2) {
+                      taskController.taskList.sort(
+                        (a, b) => intMeanOf(b.highPriority).compareTo(intMeanOf(a.highPriority)),
+                      );
+                      taskController.taskList.sort((a, b) => b.startDate.compareTo(a.startDate));
+                    }
+                  }
+
+                  if (radioController.selected1Value.value == 2) {
+                    if (radioController.selected2Value.value == 1) {
+                      taskController.taskList.sort((a, b) => a.startDate.compareTo(b.startDate));
+                      taskController.taskList.sort(
+                        (a, b) => intMeanOf(b.highPriority).compareTo(intMeanOf(a.highPriority)),
+                      );
+                    } else if (radioController.selected2Value.value == 2) {
+                      taskController.taskList.sort((a, b) => a.startDate.compareTo(b.startDate));
+                      taskController.taskList.sort(
+                        (a, b) => intMeanOf(a.highPriority).compareTo(intMeanOf(b.highPriority)),
+                      );
+                    }
+                  }
                   return Container(
                     height: 350,
                     width: double.infinity,
@@ -96,7 +178,10 @@ class MainScreen extends StatelessWidget {
                                     height: 60,
                                     width: double.infinity,
                                     decoration: BoxDecoration(
-                                      color: Colors.blue,
+                                      color:
+                                          taskController.taskList[index].highPriority
+                                              ? Colors.orange
+                                              : Colors.blue,
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Center(
@@ -113,9 +198,19 @@ class MainScreen extends StatelessWidget {
                                                   taskController.taskList[index].taskName,
                                                   style: TextStyle(fontSize: 18),
                                                 ),
-                                                Text(
-                                                  'Date to Do: ${DateFormat('yyyy-MM-dd').format(taskController.taskList[index].startDate)}',
-                                                  style: TextStyle(fontSize: 12),
+
+                                                Row(
+                                                  children: [
+                                                    Text(
+                                                      'Date to Do: ${DateFormat('yyyy-MM-dd').format(taskController.taskList[index].startDate)}',
+                                                      style: TextStyle(fontSize: 13),
+                                                    ),
+                                                    SizedBox(width: 30),
+                                                    Text(
+                                                      'Priority: ${taskController.taskList[index].highPriority ? 'High' : 'Low'}',
+                                                      style: TextStyle(fontSize: 13),
+                                                    ),
+                                                  ],
                                                 ),
                                               ],
                                             ),
@@ -123,6 +218,8 @@ class MainScreen extends StatelessWidget {
                                           InkWell(
                                             onTap: () {
                                               isEdit = true;
+                                              highPriority.value =
+                                                  taskController.taskList[index].highPriority;
                                               text1 = taskController.taskList[index].taskName;
                                               text2 = DateFormat(
                                                 'yyyy-MM-dd',
@@ -136,7 +233,7 @@ class MainScreen extends StatelessWidget {
                                             onTap: () {
                                               // call deleteTask function
                                               taskController.deleteTask(index);
-                                              theBox.deleteAt(index);
+                                              theTaskBox.deleteAt(index);
                                             },
                                             child: Icon(Icons.delete),
                                           ),
@@ -171,7 +268,7 @@ class MainScreen extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
           child: Container(
-            height: 250,
+            height: 300,
             width: double.infinity,
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
             child: Padding(
@@ -218,7 +315,24 @@ class MainScreen extends StatelessWidget {
                       }
                     },
                   ),
-                  SizedBox(height: 30),
+                  SizedBox(height: 15),
+                  Obx(
+                    () => Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Checkbox(
+                          value: highPriority.value,
+                          tristate: false,
+                          onChanged: (bool? value) {
+                            highPriority.value = value!;
+                          },
+                        ),
+
+                        Text('High Priority', style: TextStyle(fontSize: 16)),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 15),
                   Padding(
                     padding: const EdgeInsets.only(left: 32),
                     child: Row(
@@ -234,18 +348,29 @@ class MainScreen extends StatelessWidget {
 
                               if (isEdit) {
                                 // call updateTask function
-                                taskController.updateTask(index, controller1.text, taskDate);
+                                taskController.updateTask(
+                                  index,
+                                  controller1.text,
+                                  taskDate,
+                                  highPriority.value,
+                                );
                                 final theTask = TaskHive();
                                 theTask.name = controller1.text;
                                 theTask.date = taskDate;
-                                theBox.putAt(index, theTask);
+                                theTask.highPriority = highPriority.value;
+                                theTaskBox.putAt(index, theTask);
                               } else {
                                 // call createTask function
-                                taskController.createTask(controller1.text, taskDate);
+                                taskController.createTask(
+                                  controller1.text,
+                                  taskDate,
+                                  highPriority.value,
+                                );
                                 final theTask = TaskHive();
                                 theTask.name = controller1.text;
                                 theTask.date = taskDate;
-                                theBox.add(theTask);
+                                theTask.highPriority = highPriority.value;
+                                theTaskBox.add(theTask);
                               }
 
                               Get.back();
@@ -271,6 +396,22 @@ class MainScreen extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+intMeanOf(bool theBool) {
+  if (theBool) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+textMeanOf(bool theBool) {
+  if (theBool) {
+    return 'Yes';
+  } else {
+    return 'No';
   }
 }
 

@@ -18,17 +18,20 @@ class TaskHiveAdapter extends TypeAdapter<TaskHive> {
     };
     return TaskHive()
       ..name = fields[1] as String
-      ..date = fields[2] as DateTime;
+      ..date = fields[2] as DateTime
+      ..highPriority = fields[3] as bool;
   }
 
   @override
   void write(BinaryWriter writer, TaskHive obj) {
     writer
-      ..writeByte(2)
+      ..writeByte(3)
       ..writeByte(1)
       ..write(obj.name)
       ..writeByte(2)
-      ..write(obj.date);
+      ..write(obj.date)
+      ..writeByte(3)
+      ..write(obj.highPriority);
   }
 
   @override
