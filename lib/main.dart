@@ -8,7 +8,7 @@ import 'views/main_screen.dart';
 import 'package:get/get.dart';
 
 const taskBoxName = 'taskDataBase';
-const sortBoxName = 'sortDataBase';
+const settingBoxName = 'settingDataBase';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +24,7 @@ Future<void> main() async {
   }
 
   await Hive.openBox<TaskHive>(taskBoxName);
-  await Hive.openBox(sortBoxName);
+  await Hive.openBox(settingBoxName);
 
   runApp(const ToDoPractice());
 }

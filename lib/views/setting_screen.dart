@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import '../components/my_styles.dart';
+import '../controllers/checkbox_controller.dart';
 import 'package:flutter_todo_practice_1/main.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import '../controllers/radio_controller.dart';
+import '../controllers/task_controller.dart';
 
 class SettingScreen extends StatelessWidget {
-  final RadioController radioController = Get.put(RadioController());
-  final theSortBox = Hive.box(sortBoxName);
+  final TaskController taskController = Get.find();
+  final RadioController radioController = Get.find();
+  final CheckboxController checkboxController = Get.find();
+  final theSettingBox = Hive.box(settingBoxName);
 
   @override
   Widget build(BuildContext context) {
@@ -14,12 +19,15 @@ class SettingScreen extends StatelessWidget {
       appBar: AppBar(title: Text('Settings')),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(padding: const EdgeInsets.all(8.0), child: Text('Sorting method:')),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text('Sorting method:', style: txs18),
+              ),
               SizedBox(height: 8),
               Container(
                 decoration: BoxDecoration(
@@ -40,8 +48,8 @@ class SettingScreen extends StatelessWidget {
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(children: [radio1(1), Text('By Date')]),
-                              Row(children: [radio1(2), Text('By Priority')]),
+                              radio3(1, Text('By Date', style: txs14)),
+                              radio3(2, Text('By Priority', style: txs14)),
                             ],
                           );
                         },
@@ -56,8 +64,8 @@ class SettingScreen extends StatelessWidget {
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(children: [radio2(1), Text('Ascending')]),
-                              Row(children: [radio2(2), Text('Descending')]),
+                              radio4(1, Text('Ascending', style: txs14)),
+                              radio4(2, Text('Descending', style: txs14)),
                             ],
                           );
                         },
@@ -66,6 +74,26 @@ class SettingScreen extends StatelessWidget {
                   ],
                 ),
               ),
+
+              SizedBox(height: 15),
+              GetX<CheckboxController>(
+                init: CheckboxController(),
+                initState: (_) {},
+                builder: (_) {
+                  return SizedBox(
+                    child: CheckboxListTile(
+                      value: checkboxController.highPriorityOnly.value,
+                      tristate: false,
+                      title: Text('Show Only High Priority Tasks', style: TextStyle(fontSize: 16)),
+                      onChanged: (bool? value) {
+                        checkboxController.highPriorityOnly.value = value!;
+                        theSettingBox.put('highPriorityOnly', value);
+                        taskController.taskList.refresh();
+                      },
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -73,24 +101,48 @@ class SettingScreen extends StatelessWidget {
     );
   }
 
-  Radio<int> radio1(int radioButtonIndex) {
-    return Radio(
+  // Radio<int> radio1(int radioButtonIndex) {
+  //   return Radio(
+  //     value: radioButtonIndex,
+  //     groupValue: radioController.selected1Value.value,
+  //     onChanged: (int? newValue) {
+  //       radioController.setSelected1Value(newValue!);
+  //       theSortBox.put('sortBy', radioController.selected1Value.value);
+  //     },
+  //   );
+  // }
+
+  // Radio<int> radio2(int radioButtonIndex) {
+  //   return Radio(
+  //     value: radioButtonIndex,
+  //     groupValue: radioController.selected2Value.value,
+  //     onChanged: (int? newValue) {
+  //       radioController.setSelected2Value(newValue!);
+  //       theSortBox.put('sortMode', radioController.selected2Value.value);
+  //     },
+  //   );
+  // }
+
+  RadioListTile<int> radio3(int radioButtonIndex, Widget theWidget) {
+    return RadioListTile(
+      title: theWidget,
       value: radioButtonIndex,
       groupValue: radioController.selected1Value.value,
       onChanged: (int? newValue) {
         radioController.setSelected1Value(newValue!);
-        theSortBox.put('sortBy', radioController.selected1Value.value);
+        theSettingBox.put('sortBy', radioController.selected1Value.value);
       },
     );
   }
 
-  Radio<int> radio2(int radioButtonIndex) {
-    return Radio(
+  RadioListTile<int> radio4(int radioButtonIndex, Widget theWidget) {
+    return RadioListTile(
+      title: theWidget,
       value: radioButtonIndex,
       groupValue: radioController.selected2Value.value,
       onChanged: (int? newValue) {
         radioController.setSelected2Value(newValue!);
-        theSortBox.put('sortMode', radioController.selected2Value.value);
+        theSettingBox.put('sortMode', radioController.selected2Value.value);
       },
     );
   }

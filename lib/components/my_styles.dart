@@ -7,3 +7,10 @@ ButtonStyle myButtonStyle = ButtonStyle(
     TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black),
   ),
 );
+
+TextStyle txs12 = TextStyle(fontSize: 12);
+TextStyle txs13 = TextStyle(fontSize: 13);
+TextStyle txs14 = TextStyle(fontSize: 14);
+TextStyle txs16 = TextStyle(fontSize: 16);
+TextStyle txs18 = TextStyle(fontSize: 18);
+TextStyle txs20 = TextStyle(fontSize: 20);

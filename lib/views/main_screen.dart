@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_todo_practice_1/components/hive_data.dart';
+import '../controllers/checkbox_controller.dart';
 import 'setting_screen.dart';
 
 // ignore: must_be_immutable
@@ -16,12 +17,13 @@ class MainScreen extends StatelessWidget {
   MainScreen({super.key});
   // Initialize TaskController once
   final TaskController taskController = Get.put(TaskController());
+  final CheckboxController checkboxController = Get.put(CheckboxController());
 
   final TextEditingController controller1 = TextEditingController();
   final TextEditingController controller2 = TextEditingController();
 
   final theTaskBox = Hive.box<TaskHive>(taskBoxName);
-  final theSortBox = Hive.box(sortBoxName);
+  final theSettingBox = Hive.box(settingBoxName);
 
   final RadioController radioController = Get.put(RadioController());
 
@@ -36,9 +38,10 @@ class MainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (theSortBox.isNotEmpty) {
-      radioController.selected1Value.value = theSortBox.get('sortBy');
-      radioController.selected2Value.value = theSortBox.get('sortMode');
+    if (theSettingBox.isNotEmpty) {
+      radioController.selected1Value.value = theSettingBox.get('sortBy');
+      radioController.selected2Value.value = theSettingBox.get('sortMode');
+      checkboxController.highPriorityOnly.value = theSettingBox.get('highPriorityOnly');
     }
 
     if (theTaskBox.isNotEmpty) {
@@ -165,85 +168,99 @@ class MainScreen extends StatelessWidget {
                                 style: TextStyle(fontSize: 20, color: Colors.grey),
                               ),
                             )
-                            : ListView.builder(
-                              itemCount: taskController.taskList.length,
-                              scrollDirection: Axis.vertical,
-                              itemBuilder: ((context, index) {
-                                return Padding(
-                                  padding:
-                                      (index == 0)
-                                          ? const EdgeInsets.fromLTRB(8, 8, 8, 8)
-                                          : const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                                  child: Container(
-                                    height: 60,
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color:
-                                          taskController.taskList[index].highPriority
-                                              ? Colors.orange
-                                              : Colors.blue,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Center(
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          SizedBox(width: 10),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  taskController.taskList[index].taskName,
-                                                  style: TextStyle(fontSize: 18),
-                                                ),
-
-                                                Row(
+                            : Padding(
+                              padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
+                              child: ListView.builder(
+                                itemCount: taskController.taskList.length,
+                                scrollDirection: Axis.vertical,
+                                itemBuilder: ((BuildContext context, index) {
+                                  //
+                                  //
+                                  if (!taskController.taskList[index].highPriority &&
+                                      checkboxController.highPriorityOnly.value) {
+                                    return Container();
+                                  } else {
+                                    //
+                                    //
+                                    //
+                                    return Padding(
+                                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                                      child: Container(
+                                        height: 60,
+                                        width: double.infinity,
+                                        decoration: BoxDecoration(
+                                          color:
+                                              taskController.taskList[index].highPriority
+                                                  ? Colors.orange
+                                                  : Colors.blue,
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Center(
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              SizedBox(width: 10),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  mainAxisAlignment: MainAxisAlignment.center,
                                                   children: [
                                                     Text(
-                                                      'Date to Do: ${DateFormat('yyyy-MM-dd').format(taskController.taskList[index].startDate)}',
-                                                      style: TextStyle(fontSize: 13),
+                                                      taskController.taskList[index].taskName,
+                                                      style: TextStyle(fontSize: 18),
                                                     ),
-                                                    SizedBox(width: 30),
-                                                    Text(
-                                                      'Priority: ${taskController.taskList[index].highPriority ? 'High' : 'Low'}',
-                                                      style: TextStyle(fontSize: 13),
+
+                                                    Row(
+                                                      children: [
+                                                        Text(
+                                                          'Date to Do: ${DateFormat('yyyy-MM-dd').format(taskController.taskList[index].startDate)}',
+                                                          style: TextStyle(fontSize: 13),
+                                                        ),
+                                                        SizedBox(width: 30),
+                                                        Text(
+                                                          'Priority: ${taskController.taskList[index].highPriority ? 'High' : 'Low'}',
+                                                          style: TextStyle(fontSize: 13),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ],
                                                 ),
-                                              ],
-                                            ),
+                                              ),
+                                              InkWell(
+                                                onTap: () {
+                                                  isEdit = true;
+                                                  highPriority.value =
+                                                      taskController.taskList[index].highPriority;
+                                                  text1 = taskController.taskList[index].taskName;
+                                                  text2 = DateFormat('yyyy-MM-dd').format(
+                                                    taskController.taskList[index].startDate,
+                                                  );
+                                                  taskBottomSheet(text1, text2, index);
+                                                },
+                                                child: Icon(Icons.edit),
+                                              ),
+                                              SizedBox(width: 10),
+                                              InkWell(
+                                                onTap: () {
+                                                  // call deleteTask function
+                                                  taskController.deleteTask(index);
+                                                  theTaskBox.deleteAt(index);
+                                                },
+                                                child: Icon(Icons.delete),
+                                              ),
+                                              SizedBox(width: 10),
+                                            ],
                                           ),
-                                          InkWell(
-                                            onTap: () {
-                                              isEdit = true;
-                                              highPriority.value =
-                                                  taskController.taskList[index].highPriority;
-                                              text1 = taskController.taskList[index].taskName;
-                                              text2 = DateFormat(
-                                                'yyyy-MM-dd',
-                                              ).format(taskController.taskList[index].startDate);
-                                              taskBottomSheet(text1, text2, index);
-                                            },
-                                            child: Icon(Icons.edit),
-                                          ),
-                                          SizedBox(width: 10),
-                                          InkWell(
-                                            onTap: () {
-                                              // call deleteTask function
-                                              taskController.deleteTask(index);
-                                              theTaskBox.deleteAt(index);
-                                            },
-                                            child: Icon(Icons.delete),
-                                          ),
-                                          SizedBox(width: 10),
-                                        ],
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                );
-                              }),
+                                    );
+                                    //
+                                    //
+                                  }
+                                  //
+                                  //
+                                }),
+                              ),
                             ),
                   );
                 },
@@ -317,19 +334,17 @@ class MainScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 15),
                   Obx(
-                    () => Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Checkbox(
-                          value: highPriority.value,
-                          tristate: false,
-                          onChanged: (bool? value) {
-                            highPriority.value = value!;
-                          },
-                        ),
+                    () => SizedBox(
+                      width: 180,
+                      child: CheckboxListTile(
+                        value: highPriority.value,
+                        tristate: false,
+                        title: Text('High Priority', style: TextStyle(fontSize: 16)),
 
-                        Text('High Priority', style: TextStyle(fontSize: 16)),
-                      ],
+                        onChanged: (bool? value) {
+                          highPriority.value = value!;
+                        },
+                      ),
                     ),
                   ),
                   SizedBox(height: 15),
