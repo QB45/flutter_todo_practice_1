@@ -3,7 +3,7 @@ Starting development with simple ToDo flutter practice, using getx state managem
 
 This is a practice only, and can't be use as an app yet.
 
-Features
+Features:
 * Create, edit and delete tasks for a day.
 * Setting high priority for task.
 * Setting sorting method.
