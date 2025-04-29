@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 
 ButtonStyle myButtonStyle = ButtonStyle(
   backgroundColor: WidgetStateProperty.all(const Color.fromARGB(255, 255, 255, 200)),
-  fixedSize: WidgetStateProperty.all(Size(100, 45)),
+  fixedSize: WidgetStateProperty.all(Size(100, 42)),
   textStyle: WidgetStateProperty.all(
-    TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black),
+    TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black),
   ),
 );
 
+TextStyle txs11 = TextStyle(fontSize: 11);
 TextStyle txs12 = TextStyle(fontSize: 12);
 TextStyle txs13 = TextStyle(fontSize: 13);
 TextStyle txs14 = TextStyle(fontSize: 14);

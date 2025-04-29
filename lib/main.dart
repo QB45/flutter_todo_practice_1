@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'components/hive_data.dart';
-import 'views/main_screen.dart';
+import 'views/home_screen.dart';
 import 'package:get/get.dart';
 
 const taskBoxName = 'taskDataBase';
